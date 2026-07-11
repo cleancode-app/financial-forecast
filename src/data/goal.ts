@@ -8,5 +8,4 @@ export interface AssetPurchaseGoal {
         achievedDate?: string;
     },
     assetId: string;
-    startValue: number; //AUDs
 }
