@@ -1,5 +1,6 @@
 import { Box, Button, Container, Paper, Stack, Typography } from '@mui/material'
 import { useState } from 'react'
+import {ForecastChart} from "./ForecastChart.tsx";
 
 function App() {
   const [count, setCount] = useState(0)
@@ -21,6 +22,11 @@ function App() {
           </Box>
         </Stack>
       </Paper>
+        <Paper>
+            <Stack spacing={3}>
+                <ForecastChart/>
+            </Stack>
+        </Paper>
     </Container>
   )
 }
