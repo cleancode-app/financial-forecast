@@ -5,7 +5,6 @@ import FlagRoundedIcon from '@mui/icons-material/FlagRounded'
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded'
 import PieChartRoundedIcon from '@mui/icons-material/PieChartRounded'
 import ShowChartRoundedIcon from '@mui/icons-material/ShowChartRounded'
-import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded'
 import {
   AppBar,
   Box,
@@ -18,7 +17,6 @@ import {
   List,
   ListItemButton,
   ListItemText,
-  Paper,
   Stack,
   Toolbar,
   Tooltip,
@@ -27,29 +25,52 @@ import {
 } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { useState } from 'react'
-import { ForecastChart } from './ForecastChart.tsx'
+import {
+  HashRouter,
+  Link as RouterLink,
+  Route,
+  Routes,
+  matchPath,
+  useLocation,
+} from 'react-router-dom'
+import { AssetsPage } from './pages/AssetsPage.tsx'
+import { CreationPage } from './pages/CreationPage.tsx'
+import { GoalsPage } from './pages/GoalsPage.tsx'
+import { NotFoundPage } from './pages/NotFoundPage.tsx'
+import { OverviewPage } from './pages/OverviewPage.tsx'
+import { PortfoliosPage } from './pages/PortfoliosPage.tsx'
 
 const drawerWidth = 272
 
 const navigation = [
-  { label: 'Overview', icon: DashboardRoundedIcon },
-  { label: 'Assets', icon: AccountBalanceWalletRoundedIcon },
-  { label: 'Portfolios', icon: PieChartRoundedIcon },
-  { label: 'Goals', icon: FlagRoundedIcon },
+  { label: 'Overview', path: '/', icon: DashboardRoundedIcon },
+  { label: 'Assets', path: '/assets', icon: AccountBalanceWalletRoundedIcon },
+  { label: 'Portfolios', path: '/portfolios', icon: PieChartRoundedIcon },
+  { label: 'Goals', path: '/goals', icon: FlagRoundedIcon },
 ]
 
-const actions = ['Create asset', 'Create portfolio', 'Create goal']
+const actions = [
+  { label: 'Create asset', path: '/assets/new' },
+  { label: 'Create portfolio', path: '/portfolios/new' },
+  { label: 'Create goal', path: '/goals/new' },
+]
 
-function App() {
+const pageTitles: Record<string, string> = {
+  '/': 'Overview',
+  '/assets': 'Assets',
+  '/assets/new': 'Create asset',
+  '/portfolios': 'Portfolios',
+  '/portfolios/new': 'Create portfolio',
+  '/goals': 'Goals',
+  '/goals/new': 'Create goal',
+}
+
+function AppShell() {
   const theme = useTheme()
+  const location = useLocation()
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'))
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [activePage, setActivePage] = useState('Overview')
-
-  const selectPage = (page: string) => {
-    setActivePage(page)
-    setMobileOpen(false)
-  }
+  const pageTitle = pageTitles[location.pathname] ?? 'Page not found'
 
   const sidebar = (
     <Stack sx={{ height: '100%', bgcolor: '#f8fafc' }}>
@@ -65,42 +86,47 @@ function App() {
       <List disablePadding sx={{ px: 1.5 }}>
         {navigation.map((item) => {
           const NavigationIcon = item.icon
+          const selected = item.path === '/'
+            ? location.pathname === '/'
+            : Boolean(matchPath(`${item.path}/*`, location.pathname))
 
           return (
-          <ListItemButton
-            key={item.label}
-            selected={activePage === item.label}
-            onClick={() => selectPage(item.label)}
-            sx={{
-              borderRadius: 2,
-              mb: 0.5,
-              px: 1.5,
-              '&.Mui-selected': {
-                bgcolor: 'rgba(37, 99, 235, 0.09)',
-                color: 'primary.main',
-              },
-              '&.Mui-selected:hover': { bgcolor: 'rgba(37, 99, 235, 0.13)' },
-            }}
-          >
-            <Box
+            <ListItemButton
+              key={item.path}
+              component={RouterLink}
+              to={item.path}
+              selected={selected}
+              onClick={() => setMobileOpen(false)}
               sx={{
-                width: 30,
-                height: 30,
-                mr: 1.5,
-                display: 'grid',
-                placeItems: 'center',
-                borderRadius: 1.5,
-                bgcolor: activePage === item.label ? 'primary.main' : '#e2e8f0',
-                color: activePage === item.label ? 'common.white' : 'text.secondary',
+                borderRadius: 2,
+                mb: 0.5,
+                px: 1.5,
+                '&.Mui-selected': {
+                  bgcolor: 'rgba(37, 99, 235, 0.09)',
+                  color: 'primary.main',
+                },
+                '&.Mui-selected:hover': { bgcolor: 'rgba(37, 99, 235, 0.13)' },
               }}
             >
-              <NavigationIcon sx={{ fontSize: 18 }} />
-            </Box>
-            <ListItemText
-              primary={item.label}
-              slotProps={{ primary: { sx: { fontSize: 14, fontWeight: 600 } } }}
-            />
-          </ListItemButton>
+              <Box
+                sx={{
+                  width: 30,
+                  height: 30,
+                  mr: 1.5,
+                  display: 'grid',
+                  placeItems: 'center',
+                  borderRadius: 1.5,
+                  bgcolor: selected ? 'primary.main' : '#e2e8f0',
+                  color: selected ? 'common.white' : 'text.secondary',
+                }}
+              >
+                <NavigationIcon sx={{ fontSize: 18 }} />
+              </Box>
+              <ListItemText
+                primary={item.label}
+                slotProps={{ primary: { sx: { fontSize: 14, fontWeight: 600 } } }}
+              />
+            </ListItemButton>
           )
         })}
       </List>
@@ -117,14 +143,16 @@ function App() {
         <Stack spacing={1.25} sx={{ mt: 1.5 }}>
           {actions.map((action, index) => (
             <Button
-              key={action}
+              key={action.path}
+              component={RouterLink}
+              to={action.path}
               fullWidth
               variant={index === 0 ? 'contained' : 'outlined'}
-              onClick={() => selectPage(action.replace('Create ', 'New '))}
+              onClick={() => setMobileOpen(false)}
               sx={{ justifyContent: 'flex-start', py: 1.1 }}
             >
               <AddRoundedIcon sx={{ mr: 1, fontSize: 20 }} />
-              {action}
+              {action.label}
             </Button>
           ))}
         </Stack>
@@ -168,7 +196,6 @@ function App() {
               placeItems: 'center',
               borderRadius: 2,
               bgcolor: 'rgba(255,255,255,.16)',
-              fontWeight: 800,
             }}
           >
             <ShowChartRoundedIcon sx={{ fontSize: 21 }} />
@@ -217,70 +244,37 @@ function App() {
           }}
         >
           <Breadcrumbs separator="/" aria-label="breadcrumb">
-            <Link
-              underline="hover"
-              color="text.secondary"
-              component="button"
-              onClick={() => selectPage('Overview')}
-              sx={{ fontSize: 14 }}
-            >
+            <Link component={RouterLink} to="/" underline="hover" color="text.secondary" sx={{ fontSize: 14 }}>
               Home
             </Link>
             <Typography color="text.primary" sx={{ fontSize: 14, fontWeight: 600 }}>
-              {activePage}
+              {pageTitle}
             </Typography>
           </Breadcrumbs>
         </Box>
 
-        <Box
-          sx={{
-            minHeight: 'calc(100vh - 130px)',
-            px: { xs: 2.5, sm: 4, lg: 6 },
-            py: { xs: 5, md: 7 },
-            display: 'grid',
-            placeItems: 'center',
-          }}
-        >
-          <Stack spacing={4} sx={{ width: '100%', maxWidth: 900, alignItems: 'center' }}>
-            <Stack spacing={2} sx={{ maxWidth: 540, textAlign: 'center', alignItems: 'center' }}>
-            <Box
-              sx={{
-                width: 72,
-                height: 72,
-                display: 'grid',
-                placeItems: 'center',
-                borderRadius: 4,
-                bgcolor: 'common.white',
-                border: '1px solid',
-                borderColor: 'divider',
-                boxShadow: '0 12px 30px rgba(15, 23, 42, 0.07)',
-                color: 'primary.main',
-                fontSize: 28,
-                fontWeight: 800,
-              }}
-            >
-              <TrendingUpRoundedIcon sx={{ fontSize: 34 }} />
-            </Box>
-            <Typography variant="h4" component="h2" sx={{ fontWeight: 750, letterSpacing: '-0.03em' }}>
-              Welcome to Financial Forecast
-            </Typography>
-            <Typography color="text.secondary" sx={{ maxWidth: 460, lineHeight: 1.7 }}>
-              Build a clear picture of your financial future. Start by creating an asset,
-              portfolio, or goal from the sidebar.
-            </Typography>
-            </Stack>
-            {activePage === 'Overview' && (
-              <Paper
-                variant="outlined"
-                sx={{ width: '100%', p: { xs: 2, sm: 3 }, borderRadius: 3 }}
-              >
-                <ForecastChart />
-              </Paper>
-            )}
-          </Stack>
+        <Box sx={{ minHeight: 'calc(100vh - 130px)', px: { xs: 2.5, sm: 4, lg: 6 }, py: { xs: 5, md: 7 } }}>
+          <Routes>
+            <Route path="/" element={<OverviewPage />} />
+            <Route path="/assets" element={<AssetsPage />} />
+            <Route path="/assets/new" element={<CreationPage entity="asset" />} />
+            <Route path="/portfolios" element={<PortfoliosPage />} />
+            <Route path="/portfolios/new" element={<CreationPage entity="portfolio" />} />
+            <Route path="/goals" element={<GoalsPage />} />
+            <Route path="/goals/new" element={<CreationPage entity="goal" />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
         </Box>
       </Box>
     </Box>
+  )
+}
+
+function App() {
+  return (
+    <HashRouter>
+      <AppShell />
+    </HashRouter>
   )
 }
 
